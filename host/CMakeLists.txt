@@ -1,23 +1,23 @@
 # Copyright (c) Open Enclave SDK contributors.
 # Licensed under the MIT License.
 add_custom_command(
-  OUTPUT helloworld_u.h helloworld_u.c helloworld_args.h
-  DEPENDS ${CMAKE_SOURCE_DIR}/helloworld.edl
+  OUTPUT dcr_proxy_u.h dcr_proxy_u.c dcr_proxy_args.h
+  DEPENDS ${CMAKE_SOURCE_DIR}/dcr_proxy.edl
   COMMAND
-    openenclave::oeedger8r --untrusted ${CMAKE_SOURCE_DIR}/helloworld.edl
+    openenclave::oeedger8r --untrusted ${CMAKE_SOURCE_DIR}/dcr_proxy.edl
     --search-path ${OE_INCLUDEDIR} --search-path
     ${OE_INCLUDEDIR}/openenclave/edl/sgx)
 
-add_executable(helloworld_host host.c
-                               ${CMAKE_CURRENT_BINARY_DIR}/helloworld_u.c)
+add_executable(dcr_proxy_host host.c
+                               ${CMAKE_CURRENT_BINARY_DIR}/dcr_proxy_u.c)
 
 if (WIN32)
-  copy_oedebugrt_target(helloworld_host_oedebugrt)
-  add_dependencies(helloworld_host helloworld_host_oedebugrt)
+  copy_oedebugrt_target(dcr_proxy_host_oedebugrt)
+  add_dependencies(dcr_proxy_host dcr_proxy_host_oedebugrt)
 endif ()
 
 target_include_directories(
-  helloworld_host PRIVATE # Needed for the generated file helloworld_u.h
+  dcr_proxy_host PRIVATE # Needed for the generated file dcr_proxy_u.h
                           ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(helloworld_host openenclave::oehost)
+target_link_libraries(dcr_proxy_host openenclave::oehost)

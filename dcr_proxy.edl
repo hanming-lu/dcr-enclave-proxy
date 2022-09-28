@@ -6,11 +6,11 @@ enclave {
     from "platform.edl" import *;
 
     trusted {
-        public void enclave_helloworld();
+        public void enclave_dcr_proxy();
     };
 
     untrusted {
-        void host_helloworld();
+        void host_dcr_proxy();
     };
 };
 

@@ -17,8 +17,8 @@ clean:
 	$(MAKE) -C host clean
 
 run:
-	host/helloworldhost ./enclave/helloworldenc.signed
+	host/dcr_proxyhost ./enclave/dcr_proxyenc.signed
 
 simulate:
-	host/helloworldhost ./enclave/helloworldenc.signed --simulate
+	host/dcr_proxyhost ./enclave/dcr_proxyenc.signed --simulate
 
