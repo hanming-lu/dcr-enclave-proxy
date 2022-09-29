@@ -14,7 +14,7 @@
 This uses the CMake package provided by the Open Enclave SDK.
 
 ```bash
-cd dcr_enclave_proxy
+cd dcr_proxy
 mkdir build && cd build
 cmake ..
 make
