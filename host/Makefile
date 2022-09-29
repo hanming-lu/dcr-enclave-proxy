@@ -12,7 +12,7 @@ build:
 	oeedger8r ../dcr_proxy.edl --untrusted \
 		--search-path $(INCDIR) \
 		--search-path $(INCDIR)/openenclave/edl/sgx
-	$(CC) -g -c $(CFLAGS) host.c
+	$(CC) -g -c $(CFLAGS) host.cc
 	$(CC) -g -c $(CFLAGS) dcr_proxy_u.c
 	$(CC) -o dcr_proxyhost dcr_proxy_u.o host.o $(LDFLAGS)
 

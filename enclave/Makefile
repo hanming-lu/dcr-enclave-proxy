@@ -31,7 +31,7 @@ build:
 	oeedger8r ../dcr_proxy.edl --trusted \
 		--search-path $(INCDIR) \
 		--search-path $(INCDIR)/openenclave/edl/sgx
-	$(CC) -g -c $(CFLAGS) -DOE_API_VERSION=2 enc.c -o enc.o
+	$(CC) -g -c $(CFLAGS) -DOE_API_VERSION=2 enc.cc -o enc.o
 	$(CC) -g -c $(CFLAGS) -DOE_API_VERSION=2 dcr_proxy_t.c -o dcr_proxy_t.o
 	$(CC) -o dcr_proxyenc dcr_proxy_t.o enc.o $(LDFLAGS) $(CRYPTO_LDFLAGS)
 

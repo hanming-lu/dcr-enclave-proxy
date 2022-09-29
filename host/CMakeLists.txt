@@ -8,7 +8,7 @@ add_custom_command(
     --search-path ${OE_INCLUDEDIR} --search-path
     ${OE_INCLUDEDIR}/openenclave/edl/sgx)
 
-add_executable(dcr_proxy_host host.c
+add_executable(dcr_proxy_host host.cc
                                ${CMAKE_CURRENT_BINARY_DIR}/dcr_proxy_u.c)
 
 if (WIN32)
