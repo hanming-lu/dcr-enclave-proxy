@@ -1,0 +1,20 @@
+syntax = "proto2";
+
+package capsule;
+
+message CapsulePDU {
+
+  optional string payload_in_transit = 1; // encrypted payload
+  optional int64 sender = 2;
+  optional bytes signature = 3;
+
+  optional bytes prevHash = 4; // Hash ptr to the previous record, not needed for the minimal prototype
+  optional bytes hash = 5; // Hash of pdu
+
+  optional int64 timestamp = 6; //timestamp
+  optional string msgType = 7; // type of msg (e.g. EOE, RTS, SYNC)
+
+  optional int64 msgLen = 8; // length of payload, pre-encryption
+  optional string replyAddr = 9; // to send ack
+  optional bool verified = 4001; // the record is verified or not
+}
