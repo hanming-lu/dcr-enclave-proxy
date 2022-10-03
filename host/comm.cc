@@ -97,20 +97,18 @@ void Comm::run_dc_proxy_listen_ack()
     }
 }
 
-void Comm::dc_proxy_send_ack_to_replyaddr(std::string &out_msg, std::string &replyaddr)
+void Comm::host_dc_proxy_send_ack_to_replyaddr(std::string &out_msg, std::string &replyaddr)
 {
-    std::unordered_map<std::string, zmq::socket_t *> socket_send_ack_map;
-
-    auto got = socket_send_ack_map.find(replyaddr);
-    if ( got == socket_send_ack_map.end() )
+    auto got = m_send_ack_to_client_map.find(replyaddr);
+    if ( got == m_send_ack_to_client_map.end() )
     {
         zmq::socket_t *socket_send_ack = new zmq::socket_t(m_context, ZMQ_PUSH);
         socket_send_ack->connect("tcp://" + replyaddr);
-        socket_send_ack_map[replyaddr] = socket_send_ack;
+        m_send_ack_to_client_map[replyaddr] = socket_send_ack;
         Logger::log(LogLevel::DEBUG, "[DC Proxy] Connected to Client for ack. Addr: "+ replyaddr);
     }
 
-    this->send_string(out_msg, socket_send_ack_map[replyaddr]);
+    this->send_string(out_msg, m_send_ack_to_client_map[replyaddr]);
     Logger::log(LogLevel::DEBUG, "[DC Proxy] Sent an ack msg: " + out_msg +
                                     " to client: " + replyaddr);
 }

@@ -18,7 +18,7 @@ public:
     void run_dc_proxy_listen_write_req_and_join_mcast();
     void run_dc_proxy_listen_ack();
 
-    void dc_proxy_send_ack_to_replyaddr(std::string &out_msg, std::string &replyaddr);
+    void host_dc_proxy_send_ack_to_replyaddr(std::string &out_msg, std::string &replyaddr);
 
 private:
     std::string m_ip;
@@ -29,6 +29,7 @@ private:
     
     zmq::context_t m_context;
     std::unordered_map<std::string, zmq::socket_t *> m_multicast_dc_server_addrs;
+    std::unordered_map<std::string, zmq::socket_t *> m_send_ack_to_client_map;
 
     zmq::message_t string_to_message(const std::string &s)
     {
