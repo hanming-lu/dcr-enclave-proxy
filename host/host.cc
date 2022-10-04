@@ -45,9 +45,7 @@ int main(int argc, const char* argv[])
     oe_result_t result;
     int ret = 1;
     oe_enclave_t* enclave = NULL;
-    Comm *comm = NULL;
-    std::vector<std::thread> task_threads;
-
+    
     uint32_t flags = OE_ENCLAVE_FLAG_DEBUG;
     if (check_simulate_opt(&argc, argv))
     {
@@ -90,7 +88,9 @@ int main(int argc, const char* argv[])
     }
 
     /******************* TEST *******************/
-    comm = new Comm(enclave);
+    Comm *comm = new Comm(enclave);
+    std::vector<std::thread> task_threads;
+    
     task_threads.push_back(std::thread(&Comm::run_dc_proxy_listen_write_req_and_join_mcast, comm));
     
     zmq::context_t ctx(1);
