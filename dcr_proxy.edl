@@ -7,6 +7,8 @@ enclave {
 
     trusted {
         public void enclave_dcr_proxy();
+        public const char* enc_handle_write(const char* msg);
+        public void enc_handle_ack(const char* msg);
     };
 
     untrusted {
