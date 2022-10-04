@@ -1,5 +1,7 @@
 # Copyright (c) Open Enclave SDK contributors.
 # Licensed under the MIT License.
+find_package(cppzmq REQUIRED)
+
 add_custom_command(
   OUTPUT dcr_proxy_u.h dcr_proxy_u.c dcr_proxy_args.h
   DEPENDS ${CMAKE_SOURCE_DIR}/dcr_proxy.edl
@@ -20,4 +22,7 @@ target_include_directories(
   dcr_proxy_host PRIVATE # Needed for the generated file dcr_proxy_u.h
                           ${CMAKE_CURRENT_BINARY_DIR})
 
-target_link_libraries(dcr_proxy_host openenclave::oehost)
+target_link_libraries(dcr_proxy_host 
+  openenclave::oehost 
+  cppzmq
+)
