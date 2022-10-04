@@ -9,8 +9,8 @@
 #include <zmq.hpp>
 
 #include "capsule.pb.h"
-#include "comm.hpp"
-#include "util/logging.hpp"
+#include "../include/comm.hpp"
+#include "../util/logging.hpp"
 
 Comm::Comm()
     : m_context(1)
@@ -49,7 +49,8 @@ void Comm::run_dc_proxy_listen_write_req_and_join_mcast()
             std::string msg = this->recv_string(&socket_from_write);
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Received a write message: " + msg);
             
-            std::string mcast_msg = enc_handle_write(msg);
+            const char* mcast_msg_c = enc_handle_write(msg.c_str());
+            std::string mcast_msg(mcast_msg_c);
 
             for (auto &p : m_multicast_dc_server_addrs)
             {
@@ -92,7 +93,7 @@ void Comm::run_dc_proxy_listen_ack()
             std::string msg = this->recv_string(&socket_from_ack);
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Received an ack message: " + msg);
             
-            enc_handle_ack(msg);
+            enc_handle_ack(msg.c_str());
         }
     }
 }

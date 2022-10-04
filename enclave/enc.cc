@@ -31,3 +31,15 @@ void enclave_dcr_proxy()
             oe_result_str(result));
     }
 }
+
+const char* enc_handle_write(const char* msg)
+{
+    fprintf(stdout, "enc_handle_write called\n");
+    return msg;
+}
+
+void enc_handle_ack(const char* msg)
+{
+    fprintf(stdout, "enc_handle_ack called\n");
+    return;
+}

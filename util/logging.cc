@@ -1,6 +1,7 @@
 #include <iostream>
-#include "logging.hpp"
-#include "../config.h"
+#include <string>
+#include "../include/logging.hpp"
+#include "../include/config.h"
 
 namespace Logger
 {
