@@ -47,7 +47,7 @@ cmake ..
 make
 ```
 
-### Run with in Simulation Mode
+### Run in Simulation Mode
 ```bash
 make simulate
 ```
