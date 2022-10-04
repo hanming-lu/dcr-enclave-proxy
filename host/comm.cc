@@ -53,8 +53,19 @@ void Comm::run_dc_proxy_listen_write_req_and_join_mcast()
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Received a write message: " + msg);
             const char* res;
             
-            enc_handle_write(m_enclave, &res, msg.c_str());
+            oe_result_t result = enc_handle_write(m_enclave, &res, msg.c_str());
+            if (result != OE_OK)
+            {
+                fprintf(
+                    stderr,
+                    "Call to enc_handle_write failed. Write ignored.: result=%u (%s)\n",
+                    result,
+                    oe_result_str(result));
+                continue;
+            }
+
             std::string mcast_msg(res);
+            Logger::log(LogLevel::DEBUG, "[DC Proxy] Sending mcast msg: " + mcast_msg);
 
             for (auto &p : m_multicast_dc_server_addrs)
             {
@@ -66,11 +77,13 @@ void Comm::run_dc_proxy_listen_write_req_and_join_mcast()
         {
             // Received a join mcast msg
             std::string dc_server_addr = this->recv_string(&socket_from_join_mcast);
+            Logger::log(LogLevel::DEBUG, "[DC Proxy] Received join mcast for addr: " + dc_server_addr);
+            
             zmq::socket_t *socket_send_write = new zmq::socket_t(m_context, ZMQ_PUSH);
             socket_send_write->connect("tcp://" + dc_server_addr);
             m_multicast_dc_server_addrs[dc_server_addr] = socket_send_write;
 
-            Logger::log(LogLevel::DEBUG, "[DC Proxy] Received join mcast for addr: " + dc_server_addr);
+            Logger::log(LogLevel::DEBUG, "[DC Proxy] added mcast addr: " + dc_server_addr);
         }
     }
 }

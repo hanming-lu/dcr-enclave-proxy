@@ -34,7 +34,10 @@ void enclave_dcr_proxy()
 
 const char* enc_handle_write(const char* msg)
 {
-    fprintf(stdout, "enc_handle_write called\n");
+    fprintf(stdout, 
+        "enc_handle_write called with msg %s\n",
+        msg
+    );
     return msg;
 }
 
