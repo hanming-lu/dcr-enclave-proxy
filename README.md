@@ -31,6 +31,11 @@ cmake ..
 sudo make -j4 install
 ```
 
+### Install Protobuf
+```bash
+sudo apt-get install libprotobuf-dev protobuf-compiler
+```
+
 ## Build DCR Proxy via CMake
 This uses the CMake package provided by the Open Enclave SDK.
 

@@ -7,15 +7,18 @@
 #include <unordered_set>
 #include <vector>
 #include <zmq.hpp>
+#include <openenclave/host.h>
 
 #include "capsule.pb.h"
-#include "../include/comm.hpp"
-#include "../util/logging.hpp"
+#include "comm.hpp"
+#include "logging.hpp"
+#include "config.h"
+#include "dcr_proxy_u.h"
 
-Comm::Comm()
-    : m_context(1)
+Comm::Comm(oe_enclave_t* enclave)
+    : m_context(1), m_enclave(enclave)
 {
-    m_ip = std::to_string(NET_PROXY_IP);
+    m_ip = NET_PROXY_IP;
     m_join_mcast_port = std::to_string(NET_PROXY_RECV_DC_SERVER_JOIN_PORT);
     m_write_port = std::to_string(NET_PROXY_RECV_WRITE_REQ_PORT);
     m_write_addr = m_ip + ":" + m_write_port;
@@ -48,9 +51,10 @@ void Comm::run_dc_proxy_listen_write_req_and_join_mcast()
             // Received a write msg from client
             std::string msg = this->recv_string(&socket_from_write);
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Received a write message: " + msg);
+            const char* res;
             
-            const char* mcast_msg_c = enc_handle_write(msg.c_str());
-            std::string mcast_msg(mcast_msg_c);
+            enc_handle_write(m_enclave, &res, msg.c_str());
+            std::string mcast_msg(res);
 
             for (auto &p : m_multicast_dc_server_addrs)
             {
@@ -93,7 +97,7 @@ void Comm::run_dc_proxy_listen_ack()
             std::string msg = this->recv_string(&socket_from_ack);
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Received an ack message: " + msg);
             
-            enc_handle_ack(msg.c_str());
+            enc_handle_ack(m_enclave, msg.c_str());
         }
     }
 }

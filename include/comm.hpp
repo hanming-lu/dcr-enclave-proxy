@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <vector>
 #include <zmq.hpp>
+#include <openenclave/host.h>
 
 #include "capsule.pb.h"
 #include "config.h"
@@ -13,7 +14,7 @@
 class Comm
 {
 public:
-    Comm();
+    Comm(oe_enclave_t* enclave);
 
     void run_dc_proxy_listen_write_req_and_join_mcast();
     void run_dc_proxy_listen_ack();
@@ -28,6 +29,7 @@ private:
     std::string m_ack_port;
     
     zmq::context_t m_context;
+    oe_enclave_t* m_enclave;
     std::unordered_map<std::string, zmq::socket_t *> m_multicast_dc_server_addrs;
     std::unordered_map<std::string, zmq::socket_t *> m_send_ack_to_client_map;
 
