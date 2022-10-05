@@ -51,7 +51,7 @@ void Comm::run_dc_proxy_listen_write_req_and_join_mcast()
             // Received a write msg from client
             std::string msg = this->recv_string(&socket_from_write);
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Received a write message: " + msg);
-            
+
             unsigned char digest[64];
             unsigned int dilen;
             oe_result_t result = enc_handle_write(m_enclave, msg.c_str(), msg.length(), digest, &dilen);
@@ -65,7 +65,7 @@ void Comm::run_dc_proxy_listen_write_req_and_join_mcast()
                 continue;
             }
 
-            std::string mcast_msg((const char*)digest);
+            std::string mcast_msg((const char*) digest);
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Sending mcast msg: " + mcast_msg);
 
             for (auto &p : m_multicast_dc_server_addrs)

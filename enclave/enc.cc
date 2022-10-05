@@ -35,7 +35,7 @@ void enclave_dcr_proxy()
     }
 }
 
-void enc_handle_write(const char* msg, unsigned int msg_len, unsigned char *digest, unsigned int *dilen)
+void enc_handle_write(const char* msg, unsigned int msg_len, unsigned char* digest, unsigned int* dilen)
 {
     fprintf(stdout, 
         "enc_handle_write called with msg %s\n",
