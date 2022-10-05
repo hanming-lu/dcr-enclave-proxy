@@ -130,12 +130,51 @@ void Comm::run_dc_proxy_listen_ack()
             std::string msg = this->recv_string(&socket_from_ack);
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Received an ack message: " + msg);
             
-            enc_handle_ack(m_enclave, msg.c_str());
+            capsule::CapsulePDU in_dc;
+            in_dc.ParseFromString(msg);
+
+            bool succ;
+            char digest[64];
+            oe_result_t result = enc_handle_ack(
+                m_enclave, 
+                &succ, 
+                in_dc.hash().c_str(), 
+                in_dc.hash().length(), 
+                in_dc.payload_hmac().c_str(),
+                digest
+            );
+            
+            if (result != OE_OK)
+            {
+                fprintf(
+                    stderr,
+                    "Call to enc_handle_write failed. Write ignored.: result=%u (%s)\n",
+                    result,
+                    oe_result_str(result));
+                continue;
+            }
+
+            if (!succ) 
+            {
+                Logger::log(LogLevel::DEBUG, "[DC Proxy] ack quorum not achieved or verification failed. ignore.");
+                continue;
+            }
+
+            // quorum achieved.
+            in_dc.set_payload_hmac(digest);
+            std::string ack_msg;
+            in_dc.SerializeToString(&ack_msg);
+
+            Logger::log(LogLevel::DEBUG, 
+                "[DC Proxy] Sending ack msg: " + ack_msg +
+                " to replyaddr: " + in_dc.replyaddr());
+
+            host_dc_proxy_send_ack_to_replyaddr(ack_msg, in_dc.replyaddr());
         }
     }
 }
 
-void Comm::host_dc_proxy_send_ack_to_replyaddr(std::string &out_msg, std::string &replyaddr)
+void Comm::host_dc_proxy_send_ack_to_replyaddr(std::string &out_msg, const std::string &replyaddr)
 {
     auto got = m_send_ack_to_client_map.find(replyaddr);
     if ( got == m_send_ack_to_client_map.end() )

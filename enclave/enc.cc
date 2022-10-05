@@ -4,8 +4,10 @@
 #include <stdio.h>
 #include <openssl/evp.h>
 #include <string>
+#include <unordered_map>
 
 #include "crypto.hpp"
+#include "config.h"
 #include "logging.hpp"
 
 // Include the trusted dcr_proxy header that is generated
@@ -21,6 +23,8 @@ unsigned int c_klen = 11;
 
 const char* s_hmac_key = "0123456789";
 unsigned int s_klen = 11;
+
+std::unordered_map<std::string, int> *recv_ack_map = new std::unordered_map<std::string, int>;
 void enclave_dcr_proxy()
 {
     // Print a message from the enclave. Note that this
@@ -73,8 +77,38 @@ bool enc_handle_write(
     return ret;
 }
 
-void enc_handle_ack(const char* msg)
+bool enc_handle_ack(
+    const char* msg, unsigned int msg_len, 
+    const char* s_digest_in,
+    char* c_digest_out)
 {
-    fprintf(stdout, "enc_handle_ack called\n");
-    return;
+    bool ret = false; // return true only if quorum is achieved
+
+    // verify if received server's hmac is valid
+    std::string s_digest_expected = hmac_sha256(s_hmac_key, s_klen, msg, msg_len);
+
+    if (std::strcmp(s_digest_expected.c_str(), s_digest_in) == 0)
+    {
+        Logger::log(LogLevel::DEBUG, "[HMAC] HMAC verification successful for ack: " + (std::string) msg);
+    }
+    else
+    {
+        Logger::log(LogLevel::DEBUG, 
+            "[HMAC] HMAC verification failed for msg: " + (std::string) msg +
+            "\n Expected: " + s_digest_expected +
+            "\n Received: " + (std::string) s_digest_in
+        );
+    }
+
+    (*recv_ack_map)[(std::string) msg] += 1;
+    if ((*recv_ack_map)[(std::string) msg] == WRITE_THRESHOLD) {
+        Logger::log(LogLevel::DEBUG, "[DC Proxy] ack message reached threshold for hash: " + (std::string) msg);
+        ret = true;
+    }
+
+    // generate client's hmac
+    std::string c_digest = hmac_sha256(c_hmac_key, c_klen, msg, msg_len);
+    std::strcpy(c_digest_out, c_digest.c_str());
+    
+    return ret;
 }

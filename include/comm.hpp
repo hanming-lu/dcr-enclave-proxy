@@ -19,7 +19,7 @@ public:
     void run_dc_proxy_listen_write_req_and_join_mcast();
     void run_dc_proxy_listen_ack();
 
-    void host_dc_proxy_send_ack_to_replyaddr(std::string &out_msg, std::string &replyaddr);
+    void host_dc_proxy_send_ack_to_replyaddr(std::string &out_msg, const std::string &replyaddr);
 
 private:
     std::string m_ip;
