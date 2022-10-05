@@ -9,6 +9,7 @@
 #include <thread>
 #include <vector>
 
+#include "capsule.pb.h"
 #include "comm.hpp"
 #include "logging.hpp"
 #include "config.h"
@@ -18,14 +19,14 @@
 // sdk tool oeedger8r against the dcr_proxy.edl file.
 #include "dcr_proxy_u.h"
 
-bool check_simulate_opt(int* argc, const char* argv[])
+bool check_simulate_opt(int *argc, const char *argv[])
 {
     for (int i = 0; i < *argc; i++)
     {
         if (strcmp(argv[i], "--simulate") == 0)
         {
             fprintf(stdout, "Running in simulation mode\n");
-            memmove(&argv[i], &argv[i + 1], (*argc - i) * sizeof(char*));
+            memmove(&argv[i], &argv[i + 1], (*argc - i) * sizeof(char *));
             (*argc)--;
             return true;
         }
@@ -33,24 +34,91 @@ bool check_simulate_opt(int* argc, const char* argv[])
     return false;
 }
 
-// This is the function that the enclave will call back into to
-// print a message.
-void host_dcr_proxy()
+// Test code snippet used for debugging
+void test_code()
 {
-    fprintf(stdout, "Enclave called into host to print: Running host code!\n");
+    zmq::context_t ctx(1);
+    // socket send write
+    zmq::socket_t *socket_send_write = new zmq::socket_t(ctx, ZMQ_PUSH);
+    Logger::log(LogLevel::DEBUG, "[TEST] connecting write socket: tcp://localhost:" + std::to_string(NET_PROXY_RECV_WRITE_REQ_PORT));
+    socket_send_write->connect("tcp://localhost:" + std::to_string(NET_PROXY_RECV_WRITE_REQ_PORT));
+
+    // socket send ack
+    zmq::socket_t *socket_send_ack = new zmq::socket_t(ctx, ZMQ_PUSH);
+    Logger::log(LogLevel::DEBUG, "[TEST] connecting ack socket: tcp://localhost:" + std::to_string(NET_PROXY_RECV_ACK_PORT));
+    socket_send_ack->connect("tcp://localhost:" + std::to_string(NET_PROXY_RECV_ACK_PORT));
+
+    // test send write
+    capsule::CapsulePDU dc;
+    dc.set_payload_in_transit("test_payload_in_transit");
+    dc.set_payload_hmac("5be3f2112f50abcfb00ac6e991b63c3e983d48a9e8ebe42ea2e16dbc4360c00d");
+    std::string out_msg;
+    dc.SerializeToString(&out_msg);
+    zmq::message_t msg(out_msg.size());
+    memcpy(msg.data(), out_msg.c_str(), out_msg.size());
+    Logger::log(LogLevel::DEBUG, "[TEST] sending write: " + out_msg);
+    socket_send_write->send(msg);
+
+    // test send ack (3 times)
+    std::this_thread::sleep_for(std::chrono::seconds(1)); // wait for put to finish
+    fprintf(stdout, "\n");
+    capsule::CapsulePDU ack_dc;
+    ack_dc.set_hash("test_hash");
+    ack_dc.set_payload_hmac("4be75f9898d9c7a5238b1029f1eaebe6f5c0c56c7dc141e99603f88d642bf7d5");
+    ack_dc.set_replyaddr("localhost:3004");
+    std::string out_ack_msg;
+    ack_dc.SerializeToString(&out_ack_msg);
+    zmq::message_t ack_msg(out_ack_msg.size());
+    memcpy(ack_msg.data(), out_ack_msg.c_str(), out_ack_msg.size());
+    Logger::log(LogLevel::DEBUG, "[TEST] sending ack: " + out_ack_msg);
+    socket_send_ack->send(ack_msg);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    fprintf(stdout, "\n");
+    zmq::message_t ack_msg_2(out_ack_msg.size());
+    memcpy(ack_msg_2.data(), out_ack_msg.c_str(), out_ack_msg.size());
+    Logger::log(LogLevel::DEBUG, "[TEST] sending ack second time: " + out_ack_msg);
+    socket_send_ack->send(ack_msg_2);
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    fprintf(stdout, "\n");
+    zmq::message_t ack_msg_3(out_ack_msg.size());
+    memcpy(ack_msg_3.data(), out_ack_msg.c_str(), out_ack_msg.size());
+    Logger::log(LogLevel::DEBUG, "[TEST] sending ack third time: " + out_ack_msg);
+    socket_send_ack->send(ack_msg_3);
+
+    // test recv ack
+    std::string test_recv_ack_addr = "localhost:3004";
+    zmq::socket_t socket_recv_ack(ctx, ZMQ_PULL);
+    socket_recv_ack.bind("tcp://*:3004");
+
+    std::vector<zmq::pollitem_t> pollitems = {
+        {static_cast<void *>(socket_recv_ack), 0, ZMQ_POLLIN, 0},
+    };
+    while (true)
+    {
+        zmq::poll(pollitems.data(), pollitems.size(), 0);
+        if (pollitems[0].revents & ZMQ_POLLIN)
+        {
+            // Received an ack msg from proxy
+            zmq::message_t message;
+            socket_recv_ack.recv(&message);
+            std::string ack_msg = std::string(static_cast<const char *>(message.data()), message.size());
+            Logger::log(LogLevel::DEBUG, "[TEST CLIENT] Received an ack message: " + ack_msg);
+        }
+    }
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, const char *argv[])
 {
     oe_result_t result;
     int ret = 1;
-    oe_enclave_t* enclave = NULL;
-    
+    oe_enclave_t *enclave = NULL;
+
     uint32_t flags = OE_ENCLAVE_FLAG_DEBUG;
     if (check_simulate_opt(&argc, argv))
     {
         flags |= OE_ENCLAVE_FLAG_SIMULATE;
-        fprintf(stdout, "Running in SIMULATE MODE\n");
     }
 
     if (argc != 2)
@@ -74,42 +142,21 @@ int main(int argc, const char* argv[])
         return -1;
     }
 
-    // Call into the enclave
-    fprintf(stdout, "Host going to call into enclave_dcr_proxy\n");
-    result = enclave_dcr_proxy(enclave);
-    if (result != OE_OK)
-    {
-        fprintf(
-            stderr,
-            "calling into enclave_dcr_proxy failed: result=%u (%s)\n",
-            result,
-            oe_result_str(result));
-        return -1;
-    }
-
-    /******************* TEST *******************/
     Comm *comm = new Comm(enclave);
     std::vector<std::thread> task_threads;
-    
-    task_threads.push_back(std::thread(&Comm::run_dc_proxy_listen_write_req_and_join_mcast, comm));
-    
-    zmq::context_t ctx(1);
-    zmq::socket_t *socket_send_write = new zmq::socket_t(ctx, ZMQ_PUSH);
-    Logger::log(LogLevel::DEBUG, "[TEST] connecting: tcp://localhost:" + std::to_string(NET_PROXY_RECV_WRITE_REQ_PORT));
-    socket_send_write->connect("tcp://localhost:" + std::to_string(NET_PROXY_RECV_WRITE_REQ_PORT));
 
-    std::string s = "test_string";
-    zmq::message_t msg(s.size());
-    memcpy(msg.data(), s.c_str(), s.size());
-    Logger::log(LogLevel::DEBUG, "[TEST] sending: " + s);
-    socket_send_write->send(msg);
-    
+    task_threads.push_back(std::thread(&Comm::run_dc_proxy_listen_write_req_and_join_mcast, comm));
+    task_threads.push_back(std::thread(&Comm::run_dc_proxy_listen_ack, comm));
+
+#if DEBUG_MODE == true
+    test_code();
+#endif
+
     // Wait for all tasks to finish
     for (auto &t : task_threads)
     {
         t.join();
     }
-    /******************* TEST END *******************/
 
     ret = 0;
 

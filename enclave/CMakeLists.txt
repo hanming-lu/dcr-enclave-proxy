@@ -1,6 +1,9 @@
 # Copyright (c) Open Enclave SDK contributors.
 # Licensed under the MIT License.
 
+# Openssl
+find_package(OpenSSL REQUIRED)
+
 # Use the edger8r to generate C bindings from the EDL file.
 add_custom_command(
   OUTPUT dcr_proxy_t.h dcr_proxy_t.c dcr_proxy_args.h
@@ -10,7 +13,13 @@ add_custom_command(
     --search-path ${OE_INCLUDEDIR} --search-path
     ${OE_INCLUDEDIR}/openenclave/edl/sgx)
 
-add_executable(enclave enc.cc ${CMAKE_CURRENT_BINARY_DIR}/dcr_proxy_t.c)
+include_directories(${CMAKE_SOURCE_DIR}/include)
+set(enclave_source_files
+  enc.cc
+  ${CMAKE_SOURCE_DIR}/util/logging.cc
+)
+add_executable(enclave ${enclave_source_files}
+                       ${CMAKE_CURRENT_BINARY_DIR}/dcr_proxy_t.c)
 
 if (WIN32)
   maybe_build_using_clangw(enclave)
@@ -27,9 +36,11 @@ if (LVI_MITIGATION MATCHES ControlFlow)
   # Link against LVI-mitigated libraries.
   target_link_libraries(
     enclave openenclave::oeenclave-lvi-cfg
-    openenclave::oecrypto${OE_CRYPTO_LIB}-lvi-cfg openenclave::oelibc-lvi-cfg)
+    openenclave::oecrypto${OE_CRYPTO_LIB}-lvi-cfg openenclave::oelibc-lvi-cfg
+    openenclave::oecryptoopenssl)
 else ()
   target_link_libraries(
     enclave openenclave::oeenclave openenclave::oecrypto${OE_CRYPTO_LIB}
-    openenclave::oelibc)
+    openenclave::oelibcxx
+    openenclave::oecryptoopenssl)
 endif ()
