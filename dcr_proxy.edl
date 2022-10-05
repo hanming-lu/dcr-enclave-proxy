@@ -7,7 +7,7 @@ enclave {
 
     trusted {
         public void enclave_dcr_proxy();
-        public void enc_handle_write(const char* msg, unsigned int msg_len, unsigned char* digest, unsigned int* dilen);
+        public bool enc_handle_write(const char* msg, unsigned int msg_len, const char* c_digest_in, char* s_digest_out);
         public void enc_handle_ack(const char* msg);
     };
 

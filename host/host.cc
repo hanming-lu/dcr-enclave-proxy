@@ -9,6 +9,7 @@
 #include <thread>
 #include <vector>
 
+#include "capsule.pb.h"
 #include "comm.hpp"
 #include "logging.hpp"
 #include "config.h"
@@ -98,10 +99,14 @@ int main(int argc, const char* argv[])
     Logger::log(LogLevel::DEBUG, "[TEST] connecting: tcp://localhost:" + std::to_string(NET_PROXY_RECV_WRITE_REQ_PORT));
     socket_send_write->connect("tcp://localhost:" + std::to_string(NET_PROXY_RECV_WRITE_REQ_PORT));
 
-    std::string s = "test_string";
-    zmq::message_t msg(s.size());
-    memcpy(msg.data(), s.c_str(), s.size());
-    Logger::log(LogLevel::DEBUG, "[TEST] sending: " + s);
+    capsule::CapsulePDU dc;
+    dc.set_payload_in_transit("test_capsule_pdu");
+    dc.set_payload_hmac("399cedb75419d62c5bed9420e9b954b89c7c332ea88479ffd7b74aee062ba258");
+    std::string out_msg;
+    dc.SerializeToString(&out_msg);
+    zmq::message_t msg(out_msg.size());
+    memcpy(msg.data(), out_msg.c_str(), out_msg.size());
+    Logger::log(LogLevel::DEBUG, "[TEST] sending: " + out_msg);
     socket_send_write->send(msg);
     
     // Wait for all tasks to finish

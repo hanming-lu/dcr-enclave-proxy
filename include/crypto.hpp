@@ -21,21 +21,22 @@ std::string b2a_hex(const std::uint8_t* p, std::size_t n) {
     return res;
 }
 
-void hmac_sha256(const char* data, unsigned int dlen, unsigned char *digest, unsigned int *dilen) {
-    const char* m_hmac_key = "1234567890";
-    unsigned int m_klen = 11;
-
+std::string hmac_sha256(
+    const char* key, unsigned int klen,
+    const char* data, unsigned int dlen) 
+{
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    unsigned int dilen;
     ::HMAC(
         ::EVP_sha256()
-        , m_hmac_key
-        , m_klen
+        , key
+        , klen
         , (unsigned char *)data
         , dlen
         , digest
-        , dilen
+        , &dilen
     );
-    Logger::log(LogLevel::DEBUG, "[DC Proxy] msg hmac_sha256 digest: " + b2a_hex(digest, *dilen));
 
-    return;
+    return b2a_hex(digest, dilen);
 }
 #endif // __CRYPTO_H

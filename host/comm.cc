@@ -52,9 +52,20 @@ void Comm::run_dc_proxy_listen_write_req_and_join_mcast()
             std::string msg = this->recv_string(&socket_from_write);
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Received a write message: " + msg);
 
-            unsigned char digest[64];
-            unsigned int dilen;
-            oe_result_t result = enc_handle_write(m_enclave, msg.c_str(), msg.length(), digest, &dilen);
+            capsule::CapsulePDU in_dc;
+            in_dc.ParseFromString(msg);
+
+            bool succ;
+            char digest[64];
+            oe_result_t result = enc_handle_write(
+                m_enclave, 
+                &succ, 
+                in_dc.payload_in_transit().c_str(), 
+                in_dc.payload_in_transit().length(), 
+                in_dc.payload_hmac().c_str(),
+                digest
+            );
+            
             if (result != OE_OK)
             {
                 fprintf(
@@ -65,7 +76,15 @@ void Comm::run_dc_proxy_listen_write_req_and_join_mcast()
                 continue;
             }
 
-            std::string mcast_msg((const char*) digest);
+            if (!succ)
+            {
+                Logger::log(LogLevel::INFO, "Verification Failed, msg: " + msg);
+            }
+
+            in_dc.set_payload_hmac(digest);
+            std::string mcast_msg;
+            in_dc.SerializeToString(&mcast_msg);
+
             Logger::log(LogLevel::DEBUG, "[DC Proxy] Sending mcast msg: " + mcast_msg);
 
             for (auto &p : m_multicast_dc_server_addrs)
