@@ -18,10 +18,10 @@
 // This is the function that the host calls. It prints
 // a message in the enclave before calling back out to
 // the host to print a message from there too.
-const char *c_hmac_key = "1234567890";
+const char *c_hmac_key = "c_hmac_key";
 unsigned int c_klen = 11;
 
-const char *s_hmac_key = "0123456789";
+const char *s_hmac_key = "s_hmac_key";
 unsigned int s_klen = 11;
 
 std::unordered_map<std::string, int> *recv_ack_map = new std::unordered_map<std::string, int>;

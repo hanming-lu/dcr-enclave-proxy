@@ -51,7 +51,7 @@ void test_code()
     // test send write
     capsule::CapsulePDU dc;
     dc.set_payload_in_transit("test_payload_in_transit");
-    dc.set_payload_hmac("4765fbc9945aaef7d2b3f28b62adfb4c7396b71b54d2a1853e1be5253d2819f4");
+    dc.set_payload_hmac("5be3f2112f50abcfb00ac6e991b63c3e983d48a9e8ebe42ea2e16dbc4360c00d");
     std::string out_msg;
     dc.SerializeToString(&out_msg);
     zmq::message_t msg(out_msg.size());
@@ -64,7 +64,7 @@ void test_code()
     fprintf(stdout, "\n");
     capsule::CapsulePDU ack_dc;
     ack_dc.set_hash("test_hash");
-    ack_dc.set_payload_hmac("97b51702f6876c65d5858d10d0a1deeced5d92169ceff42eecc3a607223c5ac9");
+    ack_dc.set_payload_hmac("4be75f9898d9c7a5238b1029f1eaebe6f5c0c56c7dc141e99603f88d642bf7d5");
     ack_dc.set_replyaddr("localhost:3004");
     std::string out_ack_msg;
     ack_dc.SerializeToString(&out_ack_msg);
