@@ -18,10 +18,8 @@
 Comm::Comm(oe_enclave_t *enclave)
     : m_context(1), m_enclave(enclave)
 {
-    m_ip = NET_PROXY_IP;
     m_join_mcast_port = std::to_string(NET_PROXY_RECV_DC_SERVER_JOIN_PORT);
     m_write_port = std::to_string(NET_PROXY_RECV_WRITE_REQ_PORT);
-    m_write_addr = m_ip + ":" + m_write_port;
     m_ack_port = std::to_string(NET_PROXY_RECV_ACK_PORT);
 }
 

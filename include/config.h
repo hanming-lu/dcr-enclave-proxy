@@ -2,7 +2,7 @@
 #define __CONFIG_H
 
 /**************** Server Config ****************/
-#define DEBUG_MODE false
+#define DEBUG_MODE true
 
 // For Proxy networking
 #define NET_PROXY_IP "localhost" // my IP

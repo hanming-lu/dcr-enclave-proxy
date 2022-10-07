@@ -22,10 +22,8 @@ public:
     void host_dc_proxy_send_ack_to_replyaddr(std::string &out_msg, const std::string &replyaddr);
 
 private:
-    std::string m_ip;
     std::string m_join_mcast_port;
     std::string m_write_port;
-    std::string m_write_addr;
     std::string m_ack_port;
 
     zmq::context_t m_context;
